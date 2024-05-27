@@ -1,5 +1,7 @@
 @Library('jenkins_shared_libraries') _
 
+def webhookUrl = 'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe'
+
 pipeline {
     agent any
 
@@ -19,46 +21,22 @@ pipeline {
     post {
         success {
             script {
-                sendTeamsNotification(
-                    'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe',
-                    'SUCCESS',
-                    env.JOB_NAME,
-                    currentBuild.number,
-                    env.BUILD_URL
-                )
+                sendTeamsNotification(webhookUrl, 'SUCCESS', env.JOB_NAME, currentBuild.number, env.BUILD_URL)
             }
         }
         failure {
             script {
-                sendTeamsNotification(
-                    'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe',
-                    'FAILURE',
-                    env.JOB_NAME,
-                    currentBuild.number,
-                    env.BUILD_URL
-                )
+                sendTeamsNotification(webhookUrl, 'FAILURE', env.JOB_NAME, currentBuild.number, env.BUILD_URL)
             }
         }
         aborted {
             script {
-                sendTeamsNotification(
-                    'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe',
-                    'ABORTED',
-                    env.JOB_NAME,
-                    currentBuild.number,
-                    env.BUILD_URL
-                )
+                sendTeamsNotification(webhookUrl, 'ABORTED', env.JOB_NAME, currentBuild.number, env.BUILD_URL)
             }
         }
         unstable {
             script {
-                sendTeamsNotification(
-                    'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe',
-                    'UNSTABLE',
-                    env.JOB_NAME,
-                    currentBuild.number,
-                    env.BUILD_URL
-                )
+                sendTeamsNotification(webhookUrl, 'UNSTABLE', env.JOB_NAME, currentBuild.number, env.BUILD_URL)
             }
         }
     }
