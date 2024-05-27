@@ -1,61 +1,4 @@
-import groovy.json.JsonOutput
-
-def sendNotification(webhookUrl, status, pipelineName, buildNumber) {
-    def themeColor
-    def activityTitle
-
-    switch(status) {
-        case "Success":
-            themeColor = '007300'
-            activityTitle = "Pipeline ${status}!"
-            break
-        case "Failure":
-            themeColor = 'FF0000'
-            activityTitle = "Pipeline ${status}!"
-            break
-        case "Aborted":
-            themeColor = '808080'
-            activityTitle = "Pipeline ${status}!"
-            break
-        case "Unstable":
-            themeColor = 'FFA500'
-            activityTitle = "Pipeline ${status}!"
-            break
-        default:
-            themeColor = '000000'
-            activityTitle = "Unknown Pipeline Status"
-            break
-    }
-
-    def payload = [
-        "@type": "MessageCard",
-        "@context": "http://schema.org/extensions",
-        "summary": "Pipeline ${status}",
-        "themeColor": themeColor,
-        "sections": [[
-            "activityTitle": activityTitle,
-            "facts": [
-                ["name": "Status", "value": status],
-                ["name": "Pipeline", "value": "<a href=\"${env.BUILD_URL}\">${pipelineName} #${buildNumber}</a>"]
-            ]
-        ]]
-    ]
-
-    def jsonPayload = JsonOutput.toJson(payload)
-
-    try {
-        httpRequest(
-            contentType: 'APPLICATION_JSON',
-            httpMode: 'POST',
-            requestBody: jsonPayload,
-            url: webhookUrl
-        )
-    } catch (Exception e) {
-        echo "Failed to send notification: ${e.message}"
-    }
-}
-
-def webhookUrl = 'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe'
+@Library('jenkins_shared_libraries') _
 
 pipeline {
     agent any
@@ -76,22 +19,46 @@ pipeline {
     post {
         success {
             script {
-                sendNotification(webhookUrl, "Success", "${env.JOB_NAME}", currentBuild.number)
+                sendTeamsNotification(
+                    'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe',
+                    'SUCCESS',
+                    env.JOB_NAME,
+                    currentBuild.number,
+                    env.BUILD_URL
+                )
             }
         }
         failure {
             script {
-                sendNotification(webhookUrl, "Failure", "${env.JOB_NAME}", currentBuild.number)
+                sendTeamsNotification(
+                    'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe',
+                    'FAILURE',
+                    env.JOB_NAME,
+                    currentBuild.number,
+                    env.BUILD_URL
+                )
             }
         }
         aborted {
             script {
-                sendNotification(webhookUrl, "Aborted", "${env.JOB_NAME}", currentBuild.number)
+                sendTeamsNotification(
+                    'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe',
+                    'ABORTED',
+                    env.JOB_NAME,
+                    currentBuild.number,
+                    env.BUILD_URL
+                )
             }
         }
         unstable {
             script {
-                sendNotification(webhookUrl, "Unstable", "${env.JOB_NAME}", currentBuild.number)
+                sendTeamsNotification(
+                    'https://amdcloud.webhook.office.com/webhookb2/133d4f16-689b-4281-a94b-44725b948c77@3dd8961f-e488-4e60-8e11-a82d994e183d/IncomingWebhook/20c43fc799fd49e9813582813c638323/f9e22351-f1c9-494f-88c5-8e04accf2ffe',
+                    'UNSTABLE',
+                    env.JOB_NAME,
+                    currentBuild.number,
+                    env.BUILD_URL
+                )
             }
         }
     }
