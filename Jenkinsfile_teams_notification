@@ -1,4 +1,4 @@
-@Library('jenkins_shared_libraries') _
+@Library('test_teams_nikamuni') _
 
 pipeline {
     agent any
