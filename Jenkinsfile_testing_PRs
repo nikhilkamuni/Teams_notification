@@ -47,6 +47,8 @@ def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: 
         ]
     ).decode()
 
+    print(f"Git log output:\\n{gitlog}")  # Debug: Print git log output
+
     title_pattern = re.compile(regex)
     merge_pattern = re.compile("^Merge pull request #([0-9]+) from .*\$")
 
@@ -71,8 +73,11 @@ github_object = Github(
 repo = github_object.get_repo("nikhilkamuni/Teams_notification")
 merged_prs = check_pr_titles(repo, "nightly_success", "main", ".*")
 
-for pr in merged_prs:
-    print(pr)
+if not merged_prs:
+    print("No merged PRs found.")
+else:
+    for pr in merged_prs:
+        print(pr)
 EOF
                         """, returnStdout: true).trim()
 
