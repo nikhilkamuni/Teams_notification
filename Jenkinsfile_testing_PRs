@@ -37,6 +37,9 @@ def get_pull_title(pull_id: int, repo: Repository) -> str:
     return repo.get_pull(pull_id).title
 
 def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: str) -> list:
+    # Fetch the latest updates from the remote repository
+    subprocess.check_output(["git", "fetch", "origin"])
+
     gitlog = subprocess.check_output(
         [
             "git",
@@ -97,6 +100,7 @@ EOF
                     git config --global user.email "nikhilkamuni@gmail.com"
                     git config --global user.name "nikhilkamuni"
                     git checkout nightly_success
+                    git fetch origin  # Ensure we have the latest changes from the remote
                     git merge origin/nightly -m "Automated merge from nightly to nightly_success"
                     git push https://${GITHUB_TOKEN}@github.com/nikhilkamuni/Teams_notification.git nightly_success
                     """
