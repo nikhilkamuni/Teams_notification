@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        GITHUB_TOKEN = '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' // Hardcoded GitHub token
+        GITHUB_TOKEN = '' // Placeholder for the token
     }
 
     stages {
@@ -24,8 +24,9 @@ pipeline {
             steps {
                 // Run the script to fetch the list of merged PRs
                 script {
-                    def output = sh(script: """
-                        python3 << 'EOF'
+                    withCredentials([string(credentialsId: 'dfb083eb-a2d3-4ac3-b5b1-4709b0660df5', variable: 'GITHUB_TOKEN')]) {
+                        def output = sh(script: """
+                            python3 << 'EOF'
 import os
 import subprocess
 import re
@@ -47,7 +48,7 @@ def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: 
     ).decode()
 
     title_pattern = re.compile(regex)
-    merge_pattern = re.compile("^Merge pull request #([0-9]+) from .*\$")
+    merge_pattern = re.compile("^Merge pull request #([0-9]+) from .*$")
 
     merged_prs = []
 
@@ -73,9 +74,10 @@ merged_prs = check_pr_titles(repo, "nightly_success", "main", ".*")
 for pr in merged_prs:
     print(pr)
 EOF
-                    """, returnStdout: true).trim()
+                        """, returnStdout: true).trim()
 
-                    echo "Merged PRs:\n${output}"
+                        echo "Merged PRs:\n${output}"
+                    }
                 }
             }
         }
@@ -84,14 +86,16 @@ EOF
     post {
         success {
             script {
-                // Merge nightly branch to nightly_success branch
-                sh """
-                git config --global user.email "nikhilkamuni@gmail.com"
-                git config --global user.name "nikhilkamuni"
-                git checkout nightly_success
-                git merge origin/nightly -m "Automated merge from nightly to nightly_success"
-                git push origin nightly_success
-                """
+                withCredentials([string(credentialsId: 'dfb083eb-a2d3-4ac3-b5b1-4709b0660df5', variable: 'GITHUB_TOKEN')]) {
+                    // Merge nightly branch to nightly_success branch
+                    sh """
+                    git config --global user.email "nikhilkamuni@gmail.com"
+                    git config --global user.name "nikhilkamuni"
+                    git checkout nightly_success
+                    git merge origin/nightly -m "Automated merge from nightly to nightly_success"
+                    git push https://${GITHUB_TOKEN}@github.com/nikhilkamuni/Teams_notification.git nightly_success
+                    """
+                }
             }
         }
     }
