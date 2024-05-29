@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        GITHUB_TOKEN = '' // Placeholder for the token
+        GITHUB_TOKEN = 'nikamuni_personal_git' // Placeholder for the token
     }
 
     stages {
@@ -24,7 +24,7 @@ pipeline {
             steps {
                 // Run the script to fetch the list of merged PRs
                 script {
-                    withCredentials([string(credentialsId: 'dfb083eb-a2d3-4ac3-b5b1-4709b0660df5', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
                         def output = sh(script: """
                             python3 << 'EOF'
 import os
@@ -48,7 +48,7 @@ def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: 
     ).decode()
 
     title_pattern = re.compile(regex)
-    merge_pattern = re.compile("^Merge pull request #([0-9]+) from .*$")
+    merge_pattern = re.compile("^Merge pull request #([0-9]+) from .*\$")
 
     merged_prs = []
 
@@ -86,7 +86,7 @@ EOF
     post {
         success {
             script {
-                withCredentials([string(credentialsId: 'dfb083eb-a2d3-4ac3-b5b1-4709b0660df5', variable: 'GITHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
                     // Merge nightly branch to nightly_success branch
                     sh """
                     git config --global user.email "nikhilkamuni@gmail.com"
