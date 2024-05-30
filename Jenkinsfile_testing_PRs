@@ -3,6 +3,10 @@
 pipeline {
     agent any
 
+    environment {
+        GITHUB_TOKEN = credentials('nikamuni_personal_git') // Using Jenkins credentials
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -18,12 +22,18 @@ pipeline {
 
         stage('Fetch Merged PRs') {
             steps {
+                script {
+                    def output = sh(script: "python3 scripts/fetch_merged_prs.py", returnStdout: true).trim()
+                    echo "Merged PRs:\n${output}"
+                    currentBuild.description = output // Store the output in build description for later use
+                }
+            }
+        }
+
+        stage('Merge to nightly_success') {
+            steps {
                 withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
-                    script {
-                        def output = sh(script: "python3 scripts/fetch_merged_prs.py", returnStdout: true).trim()
-                        echo "Merged PRs:\n${output}"
-                        currentBuild.description = output // Store the output in build description for later use
-                    }
+                    sh 'bash scripts/merge_branches.sh'
                 }
             }
         }
