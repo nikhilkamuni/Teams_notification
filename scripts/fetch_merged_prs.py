@@ -4,23 +4,23 @@ import re
 from github import Github
 from github.Repository import Repository
 
-def get_pull_details(pull_id: int, repo: Repository) -> (str, str):
+def get_pull_title(pull_id: int, repo: Repository) -> str:
     pr = repo.get_pull(pull_id)
-    return pr.title, pr.user.login
+    return f"PR #{pr.number}: {pr.title} by {pr.user.login}"
 
 def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: str) -> list:
     gitlog = subprocess.check_output(
         [
             "git",
             "log",
-            "origin/" + dest_branch + "..origin/" + src_branch,
+            f"origin/{dest_branch}..origin/{src_branch}",
             "--merges",
             "--pretty=format:%s",
         ]
     ).decode()
 
     title_pattern = re.compile(regex)
-    merge_pattern = re.compile("^Merge pull request #([0-9]+) from .*\$")
+    merge_pattern = re.compile(r"^Merge pull request #(\d+) from .*\$")
 
     merged_prs = []
 
@@ -28,20 +28,24 @@ def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: 
         merge_match = re.search(merge_pattern, line)
         if merge_match:
             pr_id = int(merge_match.group(1))
-            title, user = get_pull_details(pr_id, repo)
-            merged_prs.append(f"PR #{pr_id} by {user}: {title}")
+            title = get_pull_title(pr_id, repo)
+            merged_prs.append(title)
 
     return merged_prs
 
-if __name__ == "__main__":
+def main():
     github_personal_access_token = os.getenv("GITHUB_TOKEN")
-    assert github_personal_access_token
+    if not github_personal_access_token:
+        raise ValueError("GitHub token not found")
 
-    github_object = Github(
-        base_url="https://api.github.com",
-        login_or_token=github_personal_access_token,
-    )
+    github_object = Github(github_personal_access_token)
     repo = github_object.get_repo("nikhilkamuni/Teams_notification")
     merged_prs = check_pr_titles(repo, "nightly_success", "main", ".*")
-    for pr in merged_prs:
-        print(pr)
+
+    if merged_prs:
+        print("\n".join(merged_prs))
+    else:
+        print("No merged PRs found.")
+
+if __name__ == "__main__":
+    main()
