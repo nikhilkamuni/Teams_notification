@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        GITHUB_TOKEN = '' // Placeholder for the token
+        GITHUB_TOKEN = 'nikamuni_personal_git' // Placeholder for the token
     }
 
     stages {
@@ -24,7 +24,7 @@ pipeline {
     post {
         success {
             script {
-                withCredentials([string(credentialsId: 'dfb083eb-a2d3-4ac3-b5b1-4709b0660df5', variable: 'GITHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
                     // Merge nightly branch to nightly_success branch
                     sh 'scripts/merge_branches.sh'
 
