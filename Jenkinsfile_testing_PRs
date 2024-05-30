@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        GITHUB_TOKEN = 'nikamuni_personal_git' // Placeholder for the token
+        GITHUB_TOKEN = '' // Placeholder for the token
     }
 
     stages {
@@ -19,91 +19,21 @@ pipeline {
                 sh 'pip install PyGithub requests'
             }
         }
-
-        stage('Fetch Merged PRs') {
-            steps {
-                // Run the script to fetch the list of merged PRs
-                script {
-                    withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
-                        def output = sh(script: """
-                            python3 << 'EOF'
-import os
-import subprocess
-import re
-from github import Github
-from github.Repository import Repository
-
-def get_pull_title(pull_id: int, repo: Repository) -> str:
-    return repo.get_pull(pull_id).title
-
-def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: str) -> list:
-    # Fetch the latest updates from the remote repository
-    subprocess.check_output(["git", "fetch", "origin"])
-
-    gitlog = subprocess.check_output(
-        [
-            "git",
-            "log",
-            "origin/" + dest_branch + "..origin/" + src_branch,
-            "--merges",
-            "--pretty=format:%s",
-        ]
-    ).decode()
-
-    print(f"Git log output:\\n{gitlog}")  # Debug: Print git log output
-
-    title_pattern = re.compile(regex)
-    merge_pattern = re.compile("^Merge pull request #([0-9]+) from .*\$")
-
-    merged_prs = []
-
-    for line in gitlog.split("\\n"):
-        merge_match = re.search(merge_pattern, line)
-        if merge_match:
-            pr_id = int(merge_match.group(1))
-            title = get_pull_title(pr_id, repo)
-            merged_prs.append(f"PR #{pr_id}: {title}")
-
-    return merged_prs
-
-github_personal_access_token = "${GITHUB_TOKEN}"
-assert github_personal_access_token
-
-github_object = Github(
-    base_url="https://api.github.com",
-    login_or_token=github_personal_access_token,
-)
-repo = github_object.get_repo("nikhilkamuni/Teams_notification")
-merged_prs = check_pr_titles(repo, "nightly_success", "main", ".*")
-
-if not merged_prs:
-    print("No merged PRs found.")
-else:
-    for pr in merged_prs:
-        print(pr)
-EOF
-                        """, returnStdout: true).trim()
-
-                        echo "Merged PRs:\n${output}"
-                    }
-                }
-            }
-        }
     }
 
     post {
         success {
             script {
-                withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'dfb083eb-a2d3-4ac3-b5b1-4709b0660df5', variable: 'GITHUB_TOKEN')]) {
                     // Merge nightly branch to nightly_success branch
-                    sh """
-                    git config --global user.email "nikhilkamuni@gmail.com"
-                    git config --global user.name "nikhilkamuni"
-                    git checkout nightly_success
-                    git fetch origin  # Ensure we have the latest changes from the remote
-                    git merge origin/nightly -m "Automated merge from nightly to nightly_success"
-                    git push https://${GITHUB_TOKEN}@github.com/nikhilkamuni/Teams_notification.git nightly_success
-                    """
+                    sh 'scripts/merge_branches.sh'
+
+                    // Fetch Merged PRs after merging
+                    def output = sh(script: """
+                        python3 scripts/fetch_merged_prs.py
+                    """, returnStdout: true).trim()
+
+                    echo "Merged PRs:\n${output}"
                 }
             }
         }
