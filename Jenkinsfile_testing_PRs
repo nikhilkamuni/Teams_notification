@@ -1,22 +1,32 @@
+@Library('test_teams_nikamuni') _
+
 pipeline {
     agent any
 
     environment {
-        GITHUB_TOKEN = 'nikamuni_personal_git' // Placeholder for the token
+        GITHUB_TOKEN = 'nikamuni_personal_git'
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                // Clone the repository from the nightly branch
                 git branch: 'nightly', url: 'https://github.com/nikhilkamuni/Teams_notification.git'
             }
         }
 
         stage('Setup Python Environment') {
             steps {
-                // Install necessary Python packages
                 sh 'pip install PyGithub requests'
+            }
+        }
+
+        stage('Fetch Merged PRs') {
+            steps {
+                script {
+                    def output = sh(script: "python3 fetch_merged_prs.py", returnStdout: true).trim()
+                    echo "Merged PRs:\n${output}"
+                    currentBuild.description = output // Store the output in build description for later use
+                }
             }
         }
     }
@@ -24,17 +34,22 @@ pipeline {
     post {
         success {
             script {
-                withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
-                    // Merge nightly branch to nightly_success branch
-                    sh 'scripts/merge_branches.sh'
-
-                    // Fetch Merged PRs after merging
-                    def output = sh(script: """
-                        python3 scripts/fetch_merged_prs.py
-                    """, returnStdout: true).trim()
-
-                    echo "Merged PRs:\n${output}"
-                }
+                sendTeamsNotification('SUCCESS', env.JOB_NAME, currentBuild.number, env.BUILD_URL, currentBuild.description)
+            }
+        }
+        failure {
+            script {
+                sendTeamsNotification('FAILURE', env.JOB_NAME, currentBuild.number, env.BUILD_URL, currentBuild.description)
+            }
+        }
+        aborted {
+            script {
+                sendTeamsNotification('ABORTED', env.JOB_NAME, currentBuild.number, env.BUILD_URL, currentBuild.description)
+            }
+        }
+        unstable {
+            script {
+                sendTeamsNotification('UNSTABLE', env.JOB_NAME, currentBuild.number, env.BUILD_URL, currentBuild.description)
             }
         }
     }
