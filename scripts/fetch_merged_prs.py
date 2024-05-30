@@ -20,7 +20,7 @@ def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: 
     ).decode()
 
     title_pattern = re.compile(regex)
-    merge_pattern = re.compile("^Merge pull request #([0-9]+) from .*$")
+    merge_pattern = re.compile("^Merge pull request #([0-9]+) from .*\$")
 
     merged_prs = []
 
