@@ -23,7 +23,7 @@ pipeline {
         stage('Fetch Merged PRs') {
             steps {
                 script {
-                    def output = sh(script: "python3 fetch_merged_prs.py", returnStdout: true).trim()
+                    def output = sh(script: "python3 scripts/fetch_merged_prs.py", returnStdout: true).trim()
                     echo "Merged PRs:\n${output}"
                     currentBuild.description = output // Store the output in build description for later use
                 }
