@@ -9,6 +9,9 @@ def get_pull_title(pull_id: int, repo: Repository) -> str:
     return f"PR #{pr.number}: {pr.title} by {pr.user.login}"
 
 def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: str) -> list:
+    # Ensure we have the latest changes from origin
+    subprocess.check_output(['git', 'fetch', 'origin'])
+
     gitlog = subprocess.check_output(
         [
             "git",
@@ -20,7 +23,7 @@ def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: 
     ).decode()
 
     title_pattern = re.compile(regex)
-    merge_pattern = re.compile(r"^Merge pull request #(\d+) from .*\$")
+    merge_pattern = re.compile(r"^Merge pull request #(\d+) from .*$")
 
     merged_prs = []
 
@@ -40,7 +43,7 @@ def main():
 
     github_object = Github(github_personal_access_token)
     repo = github_object.get_repo("nikhilkamuni/Teams_notification")
-    merged_prs = check_pr_titles(repo, "nightly_success", "main", ".*")
+    merged_prs = check_pr_titles(repo, "nightly", "nightly_success", ".*")
 
     if merged_prs:
         print("\n".join(merged_prs))
