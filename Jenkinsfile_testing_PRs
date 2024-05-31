@@ -1,22 +1,34 @@
+@Library('test_teams_nikamuni') _
+
 pipeline {
     agent any
 
     environment {
-        GITHUB_TOKEN = 'nikamuni_personal_git' // Placeholder for the token
+        GITHUB_TOKEN = credentials('nikamuni_personal_git') // Using Jenkins credentials
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                // Clone the repository from the nightly branch
                 git branch: 'nightly', url: 'https://github.com/nikhilkamuni/Teams_notification.git'
             }
         }
 
         stage('Setup Python Environment') {
             steps {
-                // Install necessary Python packages
                 sh 'pip install PyGithub requests'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'echo "Building..."'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'echo "Testing..."'
             }
         }
     }
@@ -24,17 +36,35 @@ pipeline {
     post {
         success {
             script {
+                // Merge to nightly_success only if the build is successful
                 withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
-                    // Merge nightly branch to nightly_success branch
-                    sh 'scripts/merge_branches.sh'
-
-                    // Fetch Merged PRs after merging
-                    def output = sh(script: """
-                        python3 scripts/fetch_merged_prs.py
-                    """, returnStdout: true).trim()
-
-                    echo "Merged PRs:\n${output}"
+                    sh 'bash scripts/merge_branches.sh'
                 }
+
+                // Fetch the latest changes from origin before running the script
+                sh 'git fetch origin'
+
+                // Run the Python script to fetch merged PRs
+                def output = sh(script: "python3 scripts/fetch_merged_prs.py", returnStdout: true).trim()
+                echo "Merged PRs:\n${output}"
+
+                // Send the Teams notification
+                sendTeamsNotification('SUCCESS', env.JOB_NAME, currentBuild.number, env.BUILD_URL, output)
+            }
+        }
+        failure {
+            script {
+                sendTeamsNotification('FAILURE', env.JOB_NAME, currentBuild.number, env.BUILD_URL, 'Build failed')
+            }
+        }
+        aborted {
+            script {
+                sendTeamsNotification('ABORTED', env.JOB_NAME, currentBuild.number, env.BUILD_URL, 'Build aborted')
+            }
+        }
+        unstable {
+            script {
+                sendTeamsNotification('UNSTABLE', env.JOB_NAME, currentBuild.number, env.BUILD_URL, 'Build unstable')
             }
         }
     }
