@@ -47,10 +47,9 @@ pipeline {
                 // Run the Python script to fetch merged PRs
                 def output = sh(script: "python3 scripts/fetch_merged_prs.py", returnStdout: true).trim()
                 echo "Merged PRs:\n${output}"
-                currentBuild.description = output // Store the output in build description for later use
 
                 // Send the Teams notification
-                sendTeamsNotification('SUCCESS', env.JOB_NAME, currentBuild.number, env.BUILD_URL, currentBuild.description)
+                sendTeamsNotification('SUCCESS', env.JOB_NAME, currentBuild.number, env.BUILD_URL, output)
             }
         }
         failure {
