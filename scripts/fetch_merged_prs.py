@@ -10,6 +10,7 @@ def get_pull_title(pull_id: int, repo: Repository) -> str:
     return f"<a href=\"{pr_url}\">PR #{pr.number}</a> {pr.title} by {pr.user.login}"
 
 def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: str) -> list:
+    # Run git log command to find merged PRs
     gitlog = subprocess.check_output(
         [
             "git",
@@ -20,12 +21,17 @@ def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: 
         ]
     ).decode()
 
+    # Debug print
+    print("Git log output:\n", gitlog)
+
     title_pattern = re.compile(regex)
     merge_pattern = re.compile(r"^Merge pull request #(\d+) from .*\$")
 
     merged_prs = []
 
+    # Parse each line of the git log output
     for line in gitlog.split("\n"):
+        print("Processing line:", line)  # Debug print
         merge_match = re.search(merge_pattern, line)
         if merge_match:
             pr_id = int(merge_match.group(1))
