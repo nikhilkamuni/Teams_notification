@@ -6,7 +6,8 @@ from github.Repository import Repository
 
 def get_pull_title(pull_id: int, repo: Repository) -> str:
     pr = repo.get_pull(pull_id)
-    return f"PR #{pr.number}: {pr.title} by {pr.user.login}"
+    pr_url = pr.html_url
+    return f"[PR #{pr.number}]({pr_url}) {pr.title} by {pr.user.login}"
 
 def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: str) -> list:
     gitlog = subprocess.check_output(
@@ -22,7 +23,7 @@ def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: 
     print("Git log output:\n", gitlog)  # Debug print
 
     title_pattern = re.compile(regex)
-    merge_pattern = re.compile(r"^Merge pull request #(\d+) from .*\$")
+    merge_pattern = re.compile(r"^Merge pull request #(\d+) from .*$")
 
     merged_prs = []
 
