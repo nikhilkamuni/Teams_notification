@@ -9,9 +9,6 @@ def get_pull_title(pull_id: int, repo: Repository) -> str:
     return f"PR #{pr.number}: {pr.title} by {pr.user.login}"
 
 def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: str) -> list:
-    # Ensure we have the latest changes from origin
-    subprocess.check_output(['git', 'fetch', 'origin'])
-
     gitlog = subprocess.check_output(
         [
             "git",
