@@ -43,7 +43,7 @@ def main():
 
     github_object = Github(github_personal_access_token)
     repo = github_object.get_repo("nikhilkamuni/Teams_notification")
-    merged_prs = check_pr_titles(repo, "nightly_success", "nightly", ".*")
+    merged_prs = check_pr_titles(repo, "nightly", "nightly_success", ".*")
 
     if merged_prs:
         print("\n".join(merged_prs))
