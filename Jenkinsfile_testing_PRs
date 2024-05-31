@@ -35,25 +35,22 @@ pipeline {
 
     post {
         success {
-            steps {
-                script {
-                    // Merge to nightly_success only if the build is successful
-                    withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
-                        sh 'bash scripts/merge_branches.sh'
-                    }
+            script {
+                // Merge to nightly_success only if the build is successful
+                withCredentials([string(credentialsId: 'nikamuni_personal_git', variable: 'GITHUB_TOKEN')]) {
+                    sh 'bash scripts/merge_branches.sh'
                 }
-                script {
-                    // Fetch the latest changes from origin before running the script
-                    sh 'git fetch origin'
 
-                    // Run the Python script to fetch merged PRs
-                    def output = sh(script: "python3 scripts/fetch_merged_prs.py", returnStdout: true).trim()
-                    echo "Merged PRs:\n${output}"
-                    currentBuild.description = output // Store the output in build description for later use
+                // Fetch the latest changes from origin before running the script
+                sh 'git fetch origin'
 
-                    // Send the Teams notification
-                    sendTeamsNotification('SUCCESS', env.JOB_NAME, currentBuild.number, env.BUILD_URL, currentBuild.description)
-                }
+                // Run the Python script to fetch merged PRs
+                def output = sh(script: "python3 scripts/fetch_merged_prs.py", returnStdout: true).trim()
+                echo "Merged PRs:\n${output}"
+                currentBuild.description = output // Store the output in build description for later use
+
+                // Send the Teams notification
+                sendTeamsNotification('SUCCESS', env.JOB_NAME, currentBuild.number, env.BUILD_URL, currentBuild.description)
             }
         }
         failure {
