@@ -20,15 +20,12 @@ def check_pr_titles(repo: Repository, src_branch: str, dest_branch: str, regex: 
         ]
     ).decode()
 
-    print("Git log output:\n", gitlog)  # Debug print
-
     title_pattern = re.compile(regex)
     merge_pattern = re.compile(r"^Merge pull request #(\d+) from .*\$")
 
     merged_prs = []
 
     for line in gitlog.split("\n"):
-        print("Processing line:", line)  # Debug print
         merge_match = re.search(merge_pattern, line)
         if merge_match:
             pr_id = int(merge_match.group(1))
